@@ -1,21 +1,36 @@
+#include "board.h"
 #include <SFML/Graphics.hpp>
 
 int main()
 {
-    auto window = sf::RenderWindow{ { 1920u, 1080u }, "CMake SFML Project" };
+    uint32_t width = 1000u;
+    uint32_t height = 1000u;
+
+    sf::RenderWindow window = sf::RenderWindow { { width, height }, "Chess Engine" };
+    window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(144);
 
-    while (window.isOpen())
-    {
-        for (auto event = sf::Event{}; window.pollEvent(event);)
-        {
-            if (event.type == sf::Event::Closed)
-            {
+    Board board = Board(width, height, window);
+
+    while (window.isOpen()) {
+        for (auto event = sf::Event {}; window.pollEvent(event);) {
+
+            switch (event.type) {
+            case sf::Event::Closed:
                 window.close();
+                break;
+
+            case sf::Event::KeyPressed:
+                if (event.key.code == sf::Keyboard::Escape)
+                    window.close();
+                break;
             }
         }
 
         window.clear();
+
+        board.drawBoard();
+
         window.display();
     }
 }
