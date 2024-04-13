@@ -7,7 +7,7 @@ Board::Board(unsigned int width, unsigned int height, sf::RenderWindow& window)
     : window(window)
 {
 
-    sf::VertexArray cellVertexArray(sf::Quads);
+    sf::VertexArray gridCellVA(sf::Quads);
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -16,29 +16,29 @@ Board::Board(unsigned int width, unsigned int height, sf::RenderWindow& window)
             int x = i * 125;
             int y = j * 125;
 
-            sf::Vertex v1(sf::Vector2f(x, y));
-            sf::Vertex v2(sf::Vector2f(x, y + s));
-            sf::Vertex v3(sf::Vector2f(x + s, y + s));
-            sf::Vertex v4(sf::Vector2f(x + s, y));
+            sf::Vertex tl(sf::Vector2f(x, y));
+            sf::Vertex bl(sf::Vector2f(x, y + s));
+            sf::Vertex br(sf::Vector2f(x + s, y + s));
+            sf::Vertex tr(sf::Vector2f(x + s, y));
 
             // is board piece odd or even?
             if ((x + y) % 2 == 1) {
-                v1.color = v2.color = v3.color = v4.color = dark;
+                tl.color = bl.color = br.color = tr.color = dark;
 
             } else {
-                v1.color = v2.color = v3.color = v4.color = light;
+                tl.color = bl.color = br.color = tr.color = light;
             }
 
             // add to vertex array
-            cellVertexArray.append(v1);
-            cellVertexArray.append(v2);
-            cellVertexArray.append(v3);
-            cellVertexArray.append(v4);
+            gridCellVA.append(tl);
+            gridCellVA.append(bl);
+            gridCellVA.append(br);
+            gridCellVA.append(tr);
         }
     }
 
     // set vertex array
-    this->vertexArray = cellVertexArray;
+    this->vertexArray = gridCellVA;
 }
 
 Board::~Board()
@@ -47,5 +47,9 @@ Board::~Board()
 
 void Board::drawBoard()
 {
+    sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+    // convert it to world coordinates
+    sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
+    // std::cout << worldPos.x << ", " << worldPos.y << std::endl;
     window.draw(this->vertexArray);
 }

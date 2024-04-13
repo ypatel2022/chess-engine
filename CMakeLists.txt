@@ -27,4 +27,14 @@ if(WIN32)
         VERBATIM)
 endif()
 
+# Copy resources folder to the same location as the binary
+if(WIN32)
+    file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/bin")
+elseif(APPLE)
+    file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/bin/ChessEngine.app/Contents/Resources")
+else()
+    file(COPY "${CMAKE_SOURCE_DIR}/resources" DESTINATION "${CMAKE_BINARY_DIR}/bin")
+endif()
+
+
 install(TARGETS ChessEngine)

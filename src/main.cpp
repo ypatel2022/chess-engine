@@ -24,6 +24,22 @@ int main()
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
                 break;
+            case sf::Event::Resized:
+                // set screen size
+                // get the resized size
+                sf::Vector2u size = window.getSize();
+                // setup my wanted aspect ratio
+                float heightRatio = height / width;
+                float widthRatio = width / height;
+                // adapt the resized window to my wanted aspect ratio
+                if (size.y * widthRatio <= size.x) {
+                    size.x = size.y * widthRatio;
+                } else if (size.x * heightRatio <= size.y) {
+                    size.y = size.x * heightRatio;
+                }
+                // set the new size
+                window.setSize(size);
+                break;
             }
         }
 
