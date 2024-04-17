@@ -1,5 +1,7 @@
-#include "board.h"
 #include <SFML/Graphics.hpp>
+#include <iostream>
+
+#include "board.h"
 
 int main()
 {
@@ -46,6 +48,7 @@ int main()
         window.clear();
 
         board.drawBoard();
+        board.drawPieces();
 
         window.display();
     }
