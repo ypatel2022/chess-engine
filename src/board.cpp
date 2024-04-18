@@ -29,7 +29,7 @@ sf::Texture Board::loadTextureFromFile(std::string path)
     sf::Texture temp;
     if (!temp.loadFromFile(path)) {
         std::cout << "Error loading file\n";
-        throw std::exception("Error loading file");
+        throw std::runtime_error("Error loading file");
     }
     return temp;
 }
