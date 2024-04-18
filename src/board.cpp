@@ -34,7 +34,7 @@ sf::Texture Board::loadTextureFromFile(std::string path)
     return temp;
 }
 
-Board::Board(unsigned int width, unsigned int height, sf::RenderWindow& window)
+Board::Board(sf::RenderWindow& window)
     : window(window)
 {
     initializePieces();
@@ -86,43 +86,43 @@ void Board::drawBoard()
     window.draw(this->vertexArray);
 }
 
-#include <bitset>
-
-sf::Vector2i getPositionFromIndex(int index)
+sf::Vector2i Board::getPositionFromIndex(int index)
 {
     return { index % 8, index / 8 };
 }
 
+void Board::drawPiece(int64_t piecePositions, sf::Texture& pieceTexture)
+{
+    sf::Sprite sprite;
+    sprite.setTexture(pieceTexture);
+    sprite.setTextureRect(sf::IntRect(0, 0, 125, 125));
+
+    for (int i = 0; i < 64; i++) {
+        if ((piecePositions & 1) == 1) {
+            sf::Vector2i pos = getPositionFromIndex(i);
+            sprite.setPosition(pos.x * 125, pos.y * 125);
+            window.draw(sprite);
+        }
+
+        piecePositions >>= 1;
+    }
+}
+
 void Board::drawPieces()
 {
-    // loop over black pawns example
-    sf::Sprite sprite;
-    sprite.setTexture(blackPawnTexture);
-    sprite.setTextureRect(sf::IntRect(0, 0, 125, 125));
+    // draw the black pieces
+    drawPiece(blackBishops, blackBishopTexture);
+    drawPiece(blackKing, blackKingTexture);
+    drawPiece(blackKnights, blackKnightTexture);
+    drawPiece(blackQueens, blackQueenTexture);
+    drawPiece(blackPawns, blackPawnTexture);
+    drawPiece(blackRooks, blackRookTexture);
 
-    int64_t temp = blackPawns;
-    for (int i = 0; i < 64; i++) {
-        if ((temp & 1) == 1) {
-            sf::Vector2i pos = getPositionFromIndex(i);
-            sprite.setPosition(pos.x * 125, pos.y * 125);
-            window.draw(sprite);
-        }
-
-        temp >>= 1;
-    }
-
-    // try for rooks
-    sprite.setTexture(blackRookTexture);
-    sprite.setTextureRect(sf::IntRect(0, 0, 125, 125));
-
-    temp = blackRooks;
-    for (int i = 0; i < 64; i++) {
-        if ((temp & 1) == 1) {
-            sf::Vector2i pos = getPositionFromIndex(i);
-            sprite.setPosition(pos.x * 125, pos.y * 125);
-            window.draw(sprite);
-        }
-
-        temp >>= 1;
-    }
+    // draw the white pieces
+    drawPiece(whiteBishops, whiteBishopTexture);
+    drawPiece(whiteKing, whiteKingTexture);
+    drawPiece(whiteKnights, whiteKnightTexture);
+    drawPiece(whiteQueens, whiteQueenTexture);
+    drawPiece(whitePawns, whitePawnTexture);
+    drawPiece(whiteRooks, whiteRookTexture);
 }

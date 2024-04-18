@@ -31,25 +31,28 @@ private:
     sf::Color dark = sf::Color(26, 30, 35);
     sf::Color light = sf::Color(140, 143, 188);
 
-    const sf::Texture whitePawnTexture = loadTextureFromFile("../resources/whitePawn.png");
-    const sf::Texture whiteRookTexture = loadTextureFromFile("../resources/whiteRook.png");
-    const sf::Texture whiteKnightTexture = loadTextureFromFile("../resources/whiteKnight.png");
-    const sf::Texture whiteBishopTexture = loadTextureFromFile("../resources/whiteBishop.png");
-    const sf::Texture whiteQueenTexture = loadTextureFromFile("../resources/whiteQueen.png");
-    const sf::Texture whiteKingTexture = loadTextureFromFile("../resources/whiteKing.png");
+    sf::Texture whitePawnTexture = loadTextureFromFile("../resources/whitePawn.png");
+    sf::Texture whiteRookTexture = loadTextureFromFile("../resources/whiteRook.png");
+    sf::Texture whiteKnightTexture = loadTextureFromFile("../resources/whiteKnight.png");
+    sf::Texture whiteBishopTexture = loadTextureFromFile("../resources/whiteBishop.png");
+    sf::Texture whiteQueenTexture = loadTextureFromFile("../resources/whiteQueen.png");
+    sf::Texture whiteKingTexture = loadTextureFromFile("../resources/whiteKing.png");
 
-    const sf::Texture blackPawnTexture = loadTextureFromFile("../resources/blackPawn.png");
-    const sf::Texture blackRookTexture = loadTextureFromFile("../resources/blackRook.png");
-    const sf::Texture blackKnightTexture = loadTextureFromFile("../resources/blackKnight.png");
-    const sf::Texture blackBishopTexture = loadTextureFromFile("../resources/blackBishop.png");
-    const sf::Texture blackQueenTexture = loadTextureFromFile("../resources/blackQueen.png");
-    const sf::Texture blackKingTexture = loadTextureFromFile("../resources/blackKing.png");
+    sf::Texture blackPawnTexture = loadTextureFromFile("../resources/blackPawn.png");
+    sf::Texture blackRookTexture = loadTextureFromFile("../resources/blackRook.png");
+    sf::Texture blackKnightTexture = loadTextureFromFile("../resources/blackKnight.png");
+    sf::Texture blackBishopTexture = loadTextureFromFile("../resources/blackBishop.png");
+    sf::Texture blackQueenTexture = loadTextureFromFile("../resources/blackQueen.png");
+    sf::Texture blackKingTexture = loadTextureFromFile("../resources/blackKing.png");
 
     void initializePieces();
     sf::Texture loadTextureFromFile(std::string path);
 
+    sf::Vector2i getPositionFromIndex(int index);
+    void drawPiece(int64_t piecePositions, sf::Texture& pieceTexture);
+
 public:
-    Board(unsigned int width, unsigned int height, sf::RenderWindow& window);
+    Board(sf::RenderWindow& window);
     ~Board();
 
     void drawBoard();

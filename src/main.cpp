@@ -12,7 +12,7 @@ int main()
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(144);
 
-    Board board = Board(width, height, window);
+    Board board = Board(window);
 
     while (window.isOpen()) {
         for (auto event = sf::Event {}; window.pollEvent(event);) {
