@@ -43,6 +43,8 @@ int main()
                 window.setSize(size);
                 break;
             }
+
+            board.processInput(event);
         }
 
         window.clear();

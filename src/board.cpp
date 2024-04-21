@@ -1,6 +1,7 @@
 #include "board.h"
-#include <SFML/Graphics.hpp>
 
+#include "utils.h"
+#include <SFML/Graphics.hpp>
 #include <iostream>
 
 void Board::initializePieces()
@@ -22,6 +23,8 @@ void Board::initializePieces()
     allWhitePieces = 0b0000000000000000000000000000000000000000000000001111111111111111;
     allBlackPieces = 0b1111111111111111000000000000000000000000000000000000000000000000;
     allPieces = 0b1111111111111111000000000000000000000000000000001111111111111111;
+
+    highlightedSquares = 0b0000000000000000000000000000000000000000000000000000000000000000;
 }
 
 sf::Texture Board::loadTextureFromFile(std::string path)
@@ -45,8 +48,8 @@ Board::Board(sf::RenderWindow& window)
         for (int j = 0; j < 8; j++) {
 
             float s = 125;
-            int x = i * 125;
-            int y = j * 125;
+            int x = j * s;
+            int y = i * s;
 
             sf::Vertex tl(sf::Vector2f(x, y));
             sf::Vertex bl(sf::Vector2f(x, y + s));
@@ -70,7 +73,7 @@ Board::Board(sf::RenderWindow& window)
     }
 
     // set vertex array
-    this->vertexArray = gridCellVA;
+    vertexArray = gridCellVA;
 }
 
 Board::~Board()
@@ -83,12 +86,93 @@ void Board::drawBoard()
     // convert it to world coordinates
     sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
     // std::cout << worldPos.x << ", " << worldPos.y << std::endl;
-    window.draw(this->vertexArray);
+
+    sf::VertexArray highlightedCellVA(sf::Quads);
+
+    if (highlightedSquares) {
+        // update vertex array with highlighted squares
+        for (size_t i = 0; i < 64; i++) {
+            if (((highlightedSquares >> i) & 1) == 1) {
+                // get vertex indexes
+
+                sf::Vector2i pos = getPositionFromIndex(i);
+
+                int s = 125;
+                int x = pos.x * s;
+                int y = pos.y * s;
+
+                sf::Vertex tl(sf::Vector2f(x, y));
+                sf::Vertex bl(sf::Vector2f(x, y + s));
+                sf::Vertex br(sf::Vector2f(x + s, y + s));
+                sf::Vertex tr(sf::Vector2f(x + s, y));
+
+                tl.color = bl.color = br.color = tr.color = highlighted;
+
+                // add to vertex array
+                highlightedCellVA.append(tl);
+                highlightedCellVA.append(bl);
+                highlightedCellVA.append(br);
+                highlightedCellVA.append(tr);
+            }
+        }
+    }
+
+    window.draw(vertexArray);
+    window.draw(highlightedCellVA);
 }
 
 sf::Vector2i Board::getPositionFromIndex(int index)
 {
     return { index % 8, index / 8 };
+}
+
+int Board::getIndexFromPosition(sf::Vector2i pos)
+{
+    return 8 * (int)pos.y + (int)pos.x;
+}
+
+int64_t Board::removePiece(int64_t piecePositions, int index, PieceColor color)
+{
+    // set index bit to zero
+    if (((piecePositions >> index) & 1) == 1) {
+        piecePositions &= ~((int64_t)1 << index);
+        allPieces &= ~((int64_t)1 << index);
+
+        if (color == PieceColor::White) {
+            allWhitePieces &= ~((int64_t)1 << index);
+        } else if (color == PieceColor::Black) {
+            allBlackPieces &= ~((int64_t)1 << index);
+        }
+    }
+    return piecePositions;
+}
+
+int64_t Board::removePiece(int64_t piecePositions, sf::Vector2i boardPos, PieceColor color)
+{
+    int index = getIndexFromPosition({ (int)boardPos.x / 125, (int)boardPos.y / 125 });
+    return removePiece(piecePositions, index, color);
+}
+
+int64_t Board::addPiece(int64_t piecePositions, int index, PieceColor color)
+{
+    // set index bit to one
+    if (((allPieces >> index) & 1) == 0) {
+        piecePositions |= ((int64_t)1 << index);
+        allPieces |= ((int64_t)1 << index);
+
+        if (color == PieceColor::White) {
+            allWhitePieces |= ((int64_t)1 << index);
+        } else if (color == PieceColor::Black) {
+            allBlackPieces |= ((int64_t)1 << index);
+        }
+    }
+    return piecePositions;
+}
+
+int64_t Board::addPiece(int64_t piecePositions, sf::Vector2i boardPos, PieceColor color)
+{
+    int index = getIndexFromPosition({ (int)boardPos.x / 125, (int)boardPos.y / 125 });
+    return addPiece(piecePositions, index, color);
 }
 
 void Board::drawPiece(int64_t piecePositions, sf::Texture& pieceTexture)
@@ -125,4 +209,58 @@ void Board::drawPieces()
     drawPiece(whiteQueens, whiteQueenTexture);
     drawPiece(whitePawns, whitePawnTexture);
     drawPiece(whiteRooks, whiteRookTexture);
+
+    debugPrintBitBoard(allPieces);
+    debugPrintBitBoard(allBlackPieces);
+}
+
+void Board::highlightUserPosition(int index)
+{
+    // set index bit to 1
+    // only highlight if black piece
+    if (((highlightedSquares >> index) & 1) == 0 && ((allBlackPieces >> index) & 1) == 1) {
+        highlightedSquares |= ((int64_t)1 << index);
+    }
+}
+
+void Board::processInput(sf::Event& event)
+{
+    // test to check if setting / clearing the correct bit
+    // get mouse position
+
+    sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+    if (outOfRange(pixelPos.x, 0, 1000) || outOfRange(pixelPos.y, 0, 1000)) {
+        return;
+    }
+
+    int index = getIndexFromPosition({ (int)pixelPos.x / 125, (int)pixelPos.y / 125 });
+
+    {
+        // Create a bool variable for locking the click.
+        static bool lock_click;
+
+        if (event.type == sf::Event::MouseButtonPressed) {
+            if (event.mouseButton.button == sf::Mouse::Left && lock_click != true) {
+                // std::cout << "lmb-pressed" << std::endl;
+                lock_click = true;
+                // highlightedSquares = addPiece(highlightedSquares, index, PieceColor::White);
+                highlightUserPosition(index);
+            }
+        }
+
+        if (event.type == sf::Event::MouseButtonReleased) {
+            if (event.mouseButton.button == sf::Mouse::Left) {
+                // unlock when the button has been released.
+                lock_click = false;
+            }
+        }
+
+        // Released Scope
+    }
+
+    // std::cout << index << '\n';
+
+    // example usage
+    // whitePawns = removePiece(whitePawns, index, PieceColor::White);
+    // blackPawns = addPiece(blackPawns, index, PieceColor::Black);
 }
