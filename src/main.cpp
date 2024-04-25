@@ -7,8 +7,9 @@ int main()
 {
     uint32_t width = 1000u;
     uint32_t height = 1000u;
+    bool userTurn = true;
 
-    sf::RenderWindow window = sf::RenderWindow { { width, height }, "Chess Engine" };
+    sf::RenderWindow window = sf::RenderWindow { { width, height }, "Chess Engine", sf::Style::Titlebar | sf::Style::Close };
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(144);
 
@@ -44,7 +45,9 @@ int main()
                 break;
             }
 
-            board.processInput(event);
+            if (userTurn) {
+                board.processInput(event);
+            }
         }
 
         window.clear();

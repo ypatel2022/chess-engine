@@ -17,7 +17,7 @@ file(GLOB_RECURSE HEADERS "src/*.h" "src/*.hpp")
 add_executable(ChessEngine ${SOURCES} ${HEADERS})
 
 target_link_libraries(ChessEngine PRIVATE sfml-graphics)
-target_compile_features(ChessEngine PRIVATE cxx_std_17)
+target_compile_features(ChessEngine PRIVATE cxx_std_20)
 
 if(WIN32)
     add_custom_command(

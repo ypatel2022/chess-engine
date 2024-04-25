@@ -6,8 +6,8 @@
 class Board {
 
     enum PieceColor {
-        Black,
-        White
+        Black = 0,
+        White = 1
     };
 
 private:
@@ -29,7 +29,8 @@ private:
     uint64_t allBlackPieces;
     uint64_t allPieces;
 
-    uint64_t highlightedSquares;
+    uint64_t highlightedPossibleMoves;
+    int selectedPieceIndex = -1;
 
     bool whiteTurn;
 
@@ -70,6 +71,9 @@ private:
     void highlightUserPosition(int index);
 
     void drawPiece(int64_t piecePositions, sf::Texture& pieceTexture);
+
+    // move generation
+    void generateKnightMoves(int index, PieceColor color);
 
 public:
     Board(sf::RenderWindow& window);

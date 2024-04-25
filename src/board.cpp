@@ -1,5 +1,4 @@
 #include "board.h"
-
 #include "utils.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -24,7 +23,7 @@ void Board::initializePieces()
     allBlackPieces = 0b1111111111111111000000000000000000000000000000000000000000000000;
     allPieces = 0b1111111111111111000000000000000000000000000000001111111111111111;
 
-    highlightedSquares = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    highlightedPossibleMoves = 0b0000000000000000000000000000000000000000000000000000000000000000;
 }
 
 sf::Texture Board::loadTextureFromFile(std::string path)
@@ -89,10 +88,33 @@ void Board::drawBoard()
 
     sf::VertexArray highlightedCellVA(sf::Quads);
 
-    if (highlightedSquares) {
+    if (selectedPieceIndex != -1) {
+        // draw the highlighted square
+
+        sf::Vector2i pos = getPositionFromIndex(selectedPieceIndex);
+
+        int s = 125;
+        int x = pos.x * s;
+        int y = pos.y * s;
+
+        sf::Vertex tl(sf::Vector2f(x, y));
+        sf::Vertex bl(sf::Vector2f(x, y + s));
+        sf::Vertex br(sf::Vector2f(x + s, y + s));
+        sf::Vertex tr(sf::Vector2f(x + s, y));
+
+        tl.color = bl.color = br.color = tr.color = highlighted;
+
+        // add to vertex array
+        highlightedCellVA.append(tl);
+        highlightedCellVA.append(bl);
+        highlightedCellVA.append(br);
+        highlightedCellVA.append(tr);
+    }
+
+    if (highlightedPossibleMoves) {
         // update vertex array with highlighted squares
         for (size_t i = 0; i < 64; i++) {
-            if (((highlightedSquares >> i) & 1) == 1) {
+            if (((highlightedPossibleMoves >> i) & 1) == 1) {
                 // get vertex indexes
 
                 sf::Vector2i pos = getPositionFromIndex(i);
@@ -192,6 +214,36 @@ void Board::drawPiece(int64_t piecePositions, sf::Texture& pieceTexture)
     }
 }
 
+void Board::generateKnightMoves(int index, PieceColor turnColor)
+{
+    // 17, 15, 10, 6, -6, -10, -15, -17
+    const int moves[] = { 17, 15, 10, 6, -6, -10, -15, -17 };
+
+    int pos;
+    for (size_t i = 0; i < 8; i++) {
+        int pos = index + moves[i];
+
+        // first check that pos exists within [0,63]
+        if (outOfRange(pos, 0, 63)) {
+            continue;
+        }
+
+        // check if pos is not current color
+        if (turnColor == PieceColor::White) {
+            if (((allWhitePieces >> pos) & 1) == 0) {
+                // make highlightedPossibleMoves a 1 then at pos
+                // double check no teleport is happening
+                highlightedPossibleMoves |= ((int64_t)1 << pos);
+            }
+        } else if (turnColor == PieceColor::Black) {
+            if (((allBlackPieces >> pos) & 1) == 0) {
+                // make highlightedPossibleMoves a 1 then at pos
+                highlightedPossibleMoves |= ((int64_t)1 << pos);
+            }
+        }
+    }
+}
+
 void Board::drawPieces()
 {
     // draw the black pieces
@@ -216,10 +268,16 @@ void Board::drawPieces()
 
 void Board::highlightUserPosition(int index)
 {
-    // set index bit to 1
     // only highlight if black piece
-    if (((highlightedSquares >> index) & 1) == 0 && ((allBlackPieces >> index) & 1) == 1) {
-        highlightedSquares |= ((int64_t)1 << index);
+
+    if (selectedPieceIndex == index) {
+        selectedPieceIndex = -1;
+        return;
+    }
+
+    if (((allBlackPieces >> index) & 1) == 1) {
+        // selectedPieceIndex ^= ((int64_t)1 << index);
+        selectedPieceIndex = index;
     }
 }
 
@@ -243,8 +301,13 @@ void Board::processInput(sf::Event& event)
             if (event.mouseButton.button == sf::Mouse::Left && lock_click != true) {
                 // std::cout << "lmb-pressed" << std::endl;
                 lock_click = true;
-                // highlightedSquares = addPiece(highlightedSquares, index, PieceColor::White);
+
+                // highlightedPossibleMoves = addPiece(highlightedPossibleMoves, index, PieceColor::White);
                 highlightUserPosition(index);
+
+                if (((blackKnights >> index) & 1) == 1) {
+                    generateKnightMoves(index, Black);
+                }
             }
         }
 
