@@ -1,6 +1,6 @@
 #pragma once
 
-#define DEBUG_ON 0
+#define DEBUG_ON 1
 
 #if DEBUG_ON
 #include <bitset>

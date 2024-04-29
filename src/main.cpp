@@ -11,7 +11,7 @@ int main()
 
     sf::RenderWindow window = sf::RenderWindow { { width, height }, "Chess Engine", sf::Style::Titlebar | sf::Style::Close };
     window.setVerticalSyncEnabled(true);
-    window.setFramerateLimit(144);
+    window.setFramerateLimit(60);
 
     Board board = Board(window);
 

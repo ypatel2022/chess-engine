@@ -15,13 +15,17 @@ void Board::initializePieces()
     blackPawns = 0b0000000011111111000000000000000000000000000000000000000000000000;
     blackRooks = 0b1000000100000000000000000000000000000000000000000000000000000000;
     blackKnights = 0b0100001000000000000000000000000000000000000000000000000000000000;
+
     blackBishops = 0b0010010000000000000000000000000000000000000000000000000000000000;
+    blackBishops = 0b0010010000000000000100000100000000000000001000010000000000000000;
+
     blackQueens = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKing = 0b0001000000000000000000000000000000000000000000000000000000000000;
 
-    allWhitePieces = 0b0000000000000000000000000000000000000000000000001111111111111111;
-    allBlackPieces = 0b1111111111111111000000000000000000000000000000000000000000000000;
-    allPieces = 0b1111111111111111000000000000000000000000000000001111111111111111;
+    allWhitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
+    allBlackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
+
+    allPieces = allBlackPieces | allWhitePieces;
 
     highlightedPossibleMoves = 0b0000000000000000000000000000000000000000000000000000000000000000;
 }
@@ -81,11 +85,6 @@ Board::~Board()
 
 void Board::drawBoard()
 {
-    sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
-    // convert it to world coordinates
-    sf::Vector2f worldPos = window.mapPixelToCoords(pixelPos);
-    // std::cout << worldPos.x << ", " << worldPos.y << std::endl;
-
     sf::VertexArray highlightedCellVA(sf::Quads);
 
     if (selectedPieceIndex != -1) {
@@ -111,31 +110,29 @@ void Board::drawBoard()
         highlightedCellVA.append(tr);
     }
 
-    if (highlightedPossibleMoves) {
-        // update vertex array with highlighted squares
-        for (size_t i = 0; i < 64; i++) {
-            if (((highlightedPossibleMoves >> i) & 1) == 1) {
-                // get vertex indexes
+    // update vertex array with highlighted squares
+    for (size_t i = 0; i < 64; i++) {
+        if (((highlightedPossibleMoves >> i) & 1) == 1) {
+            // get vertex indexes
 
-                sf::Vector2i pos = getPositionFromIndex(i);
+            sf::Vector2i pos = getPositionFromIndex(i);
 
-                int s = 125;
-                int x = pos.x * s;
-                int y = pos.y * s;
+            int s = 125;
+            int x = pos.x * s;
+            int y = pos.y * s;
 
-                sf::Vertex tl(sf::Vector2f(x, y));
-                sf::Vertex bl(sf::Vector2f(x, y + s));
-                sf::Vertex br(sf::Vector2f(x + s, y + s));
-                sf::Vertex tr(sf::Vector2f(x + s, y));
+            sf::Vertex tl(sf::Vector2f(x, y));
+            sf::Vertex bl(sf::Vector2f(x, y + s));
+            sf::Vertex br(sf::Vector2f(x + s, y + s));
+            sf::Vertex tr(sf::Vector2f(x + s, y));
 
-                tl.color = bl.color = br.color = tr.color = highlighted;
+            tl.color = bl.color = br.color = tr.color = highlighted;
 
-                // add to vertex array
-                highlightedCellVA.append(tl);
-                highlightedCellVA.append(bl);
-                highlightedCellVA.append(br);
-                highlightedCellVA.append(tr);
-            }
+            // add to vertex array
+            highlightedCellVA.append(tl);
+            highlightedCellVA.append(bl);
+            highlightedCellVA.append(br);
+            highlightedCellVA.append(tr);
         }
     }
 
@@ -214,7 +211,32 @@ void Board::drawPiece(int64_t piecePositions, sf::Texture& pieceTexture)
     }
 }
 
-void Board::generateKnightMoves(int index, PieceColor turnColor)
+bool Board::hasCollided(int index, PieceColor color, bool& addPiece)
+{
+    // check collision
+    if (((allPieces >> index) & 1) == 1) {
+        // check if it was white
+        if (((allWhitePieces >> index) & 1) == 1) {
+            if (color == Black) {
+                // add
+                addPiece = true;
+            }
+            return true;
+        }
+        // check if it was black
+        if (((allBlackPieces >> index) & 1) == 1) {
+            if (color == White) {
+                // add
+                addPiece = true;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Board::generatePseudoKnightMoves(int index, PieceColor turnColor)
 {
     // 17, 15, 10, 6, -6, -10, -15, -17
     const int moves[] = { 17, 15, 10, 6, -6, -10, -15, -17 };
@@ -228,18 +250,137 @@ void Board::generateKnightMoves(int index, PieceColor turnColor)
             continue;
         }
 
+        // double check no teleport is happening
+        if (moves[i] == 6 || moves[i] == -10) {
+            // make sure pos.x is greater than >= 2
+            if (index % 8 < 2) {
+                continue;
+            }
+        } else if (moves[i] == -6 || moves[i] == 10) {
+            if (index % 8 > 5) {
+                continue;
+            }
+        } else if (moves[i] == 15 || moves[i] == -17) {
+            if (index % 8 < 1) {
+                continue;
+            }
+        } else if (moves[i] == -15 || moves[i] == 17) {
+            if (index % 8 > 6) {
+                continue;
+            }
+        }
+
         // check if pos is not current color
         if (turnColor == PieceColor::White) {
             if (((allWhitePieces >> pos) & 1) == 0) {
                 // make highlightedPossibleMoves a 1 then at pos
-                // double check no teleport is happening
                 highlightedPossibleMoves |= ((int64_t)1 << pos);
             }
+
         } else if (turnColor == PieceColor::Black) {
             if (((allBlackPieces >> pos) & 1) == 0) {
                 // make highlightedPossibleMoves a 1 then at pos
                 highlightedPossibleMoves |= ((int64_t)1 << pos);
             }
+        }
+    }
+}
+
+void Board::generatePseudoRookMoves(int index, PieceColor color)
+{
+    // look in all directions (max of 8 spaces to move)
+
+    bool addPiece = false;
+
+    // down
+    for (int i = index + 8; i < 64; i += 8) {
+        if (!hasCollided(i, color, addPiece)) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        } else {
+            if (addPiece) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+                addPiece = false;
+            }
+            break;
+        }
+    }
+
+    // up
+    for (int i = index - 8; i >= 0; i -= 8) {
+        if (!hasCollided(i, color, addPiece)) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        } else {
+            if (addPiece) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+                addPiece = false;
+            }
+            break;
+        }
+    }
+
+    // left
+    for (int i = index - 1; i >= 8 * (index / 8); i--) {
+        if (!hasCollided(i, color, addPiece)) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        } else {
+            if (addPiece) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+                addPiece = false;
+            }
+            break;
+        }
+    }
+
+    // right
+    for (int i = index + 1; i < 8 * (index / 8 + 1); i++) {
+        if (!hasCollided(i, color, addPiece)) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        } else {
+            if (addPiece) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+                addPiece = false;
+            }
+            break;
+        }
+    }
+}
+
+void Board::generatePseudoBishopMoves(int index, PieceColor color)
+{
+    bool addPiece = false;
+
+    // look down+right
+    // when encountering an 8 in the "x" pos, break out of loop to avoid teleportation
+    for (int i = index + 9; i < 64; i += 9) {
+        if (index % 8 == 7) {
+            break;
+        }
+
+        if (!hasCollided(i, color, addPiece)) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        } else {
+            if (addPiece) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+                addPiece = false;
+            }
+            break;
+        }
+    }
+
+    // look down+left
+    for (int i = index + 7; i < 64; i += 7) {
+        if (index % 8 == 0) {
+            break;
+        }
+
+        if (!hasCollided(i, color, addPiece)) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        } else {
+            if (addPiece) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+                addPiece = false;
+            }
+            break;
         }
     }
 }
@@ -262,22 +403,44 @@ void Board::drawPieces()
     drawPiece(whitePawns, whitePawnTexture);
     drawPiece(whiteRooks, whiteRookTexture);
 
-    debugPrintBitBoard(allPieces);
-    debugPrintBitBoard(allBlackPieces);
+    // debugPrintBitBoard(allPieces);
+    // debugPrintBitBoard(allBlackPieces);
 }
 
 void Board::highlightUserPosition(int index)
 {
-    // only highlight if black piece
+    // debugPrintBitBoard(allPieces);
 
+    if (selectedPieceIndex != -1 && ((allPieces >> index) & 1) == 0) {
+        return;
+    }
+
+    // reset highlighted possible moves
+    highlightedPossibleMoves = 0;
+
+    // only highlight if black piece
     if (selectedPieceIndex == index) {
+        // turn off highlighted piece
         selectedPieceIndex = -1;
+
         return;
     }
 
     if (((allBlackPieces >> index) & 1) == 1) {
         // selectedPieceIndex ^= ((int64_t)1 << index);
         selectedPieceIndex = index;
+
+        if (((blackKnights >> index) & 1) == 1) {
+            generatePseudoKnightMoves(index, Black);
+        }
+
+        if (((blackRooks >> index) & 1) == 1) {
+            generatePseudoRookMoves(index, Black);
+        }
+
+        if (((blackBishops >> index) & 1) == 1) {
+            generatePseudoBishopMoves(index, Black);
+        }
     }
 }
 
@@ -304,10 +467,6 @@ void Board::processInput(sf::Event& event)
 
                 // highlightedPossibleMoves = addPiece(highlightedPossibleMoves, index, PieceColor::White);
                 highlightUserPosition(index);
-
-                if (((blackKnights >> index) & 1) == 1) {
-                    generateKnightMoves(index, Black);
-                }
             }
         }
 
