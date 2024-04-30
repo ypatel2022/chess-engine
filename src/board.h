@@ -82,6 +82,8 @@ private:
     void generatePseudoQueenMoves(int index, PieceColor color);
     void generatePseudoKingMoves(int index, PieceColor color);
 
+    void makeMove(int source, int dest);
+
 public:
     Board(sf::RenderWindow& window);
     ~Board();

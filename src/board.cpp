@@ -584,6 +584,118 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
     }
 }
 
+void Board::makeMove(int source, int dest)
+{
+    // remove piece from selectedPieceIndex on respective bitboard
+    // remove any piece from index on opponent bit board
+    // update the allBlackPieces, allWhitePieces, allPieces
+
+    // find the source piece board to remove and place in new position
+    // is it black
+    if (((allBlackPieces >> source) & 1) == 1) {
+
+        if (((blackKing >> source) & 1) == 1) {
+            blackKing &= ~((int64_t)1 << source);
+            blackKing |= ((int64_t)1 << dest);
+
+        } else if (((blackQueens >> source) & 1) == 1) {
+            blackQueens &= ~((int64_t)1 << source);
+            blackQueens |= ((int64_t)1 << dest);
+
+        } else if (((blackRooks >> source) & 1) == 1) {
+            blackRooks &= ~((int64_t)1 << source);
+            blackRooks |= ((int64_t)1 << dest);
+
+        } else if (((blackBishops >> source) & 1) == 1) {
+            blackBishops &= ~((int64_t)1 << source);
+            blackBishops |= ((int64_t)1 << dest);
+
+        } else if (((blackKnights >> source) & 1) == 1) {
+            blackKnights &= ~((int64_t)1 << source);
+            blackKnights |= ((int64_t)1 << dest);
+
+        } else if (((blackPawns >> source) & 1) == 1) {
+            blackPawns &= ~((int64_t)1 << source);
+            blackPawns |= ((int64_t)1 << dest);
+        }
+
+    } else if (((allWhitePieces >> source) & 1) == 1) {
+        // check if king
+        if (((whiteKing >> source) & 1) == 1) {
+            whiteKing &= ~((int64_t)1 << source);
+            whiteKing |= ((int64_t)1 << dest);
+
+        } else if (((whiteQueens >> source) & 1) == 1) {
+            whiteQueens &= ~((int64_t)1 << source);
+            whiteQueens |= ((int64_t)1 << dest);
+
+        } else if (((whiteRooks >> source) & 1) == 1) {
+            whiteRooks &= ~((int64_t)1 << source);
+            whiteRooks |= ((int64_t)1 << dest);
+
+        } else if (((whiteBishops >> source) & 1) == 1) {
+            whiteBishops &= ~((int64_t)1 << source);
+            whiteBishops |= ((int64_t)1 << dest);
+
+        } else if (((whiteKnights >> source) & 1) == 1) {
+            whiteKnights &= ~((int64_t)1 << source);
+            whiteKnights |= ((int64_t)1 << dest);
+
+        } else if (((whitePawns >> source) & 1) == 1) {
+            whitePawns &= ~((int64_t)1 << source);
+            whitePawns |= ((int64_t)1 << dest);
+        }
+    }
+
+    // remove the dest piece
+    if (((allBlackPieces >> dest) & 1) == 1) {
+
+        if (((blackKing >> dest) & 1) == 1) {
+            blackKing &= ~((int64_t)1 << dest);
+
+        } else if (((blackQueens >> dest) & 1) == 1) {
+            blackQueens &= ~((int64_t)1 << dest);
+
+        } else if (((blackRooks >> dest) & 1) == 1) {
+            blackRooks &= ~((int64_t)1 << dest);
+
+        } else if (((blackBishops >> dest) & 1) == 1) {
+            blackBishops &= ~((int64_t)1 << dest);
+
+        } else if (((blackKnights >> dest) & 1) == 1) {
+            blackKnights &= ~((int64_t)1 << dest);
+
+        } else if (((blackPawns >> dest) & 1) == 1) {
+            blackPawns &= ~((int64_t)1 << dest);
+        }
+
+    } else if (((allWhitePieces >> dest) & 1) == 1) {
+        // check if king
+        if (((whiteKing >> dest) & 1) == 1) {
+            whiteKing &= ~((int64_t)1 << dest);
+
+        } else if (((whiteQueens >> dest) & 1) == 1) {
+            whiteQueens &= ~((int64_t)1 << dest);
+
+        } else if (((whiteRooks >> dest) & 1) == 1) {
+            whiteRooks &= ~((int64_t)1 << dest);
+
+        } else if (((whiteBishops >> dest) & 1) == 1) {
+            whiteBishops &= ~((int64_t)1 << dest);
+
+        } else if (((whiteKnights >> dest) & 1) == 1) {
+            whiteKnights &= ~((int64_t)1 << dest);
+
+        } else if (((whitePawns >> dest) & 1) == 1) {
+            whitePawns &= ~((int64_t)1 << dest);
+        }
+    }
+
+    allWhitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
+    allBlackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
+    allPieces = allBlackPieces | allWhitePieces;
+}
+
 void Board::drawPieces()
 {
     // draw the black pieces
@@ -601,16 +713,20 @@ void Board::drawPieces()
     drawPiece(whiteQueens, whiteQueenTexture);
     drawPiece(whitePawns, whitePawnTexture);
     drawPiece(whiteRooks, whiteRookTexture);
-
-    // debugPrintBitBoard(allPieces);
-    // debugPrintBitBoard(allBlackPieces);
 }
 
 void Board::highlightUserPosition(int index)
 {
-    // debugPrintBitBoard(allPieces);
+    // do nothing if clicked on compleltely empty sqaure
+    if (((allBlackPieces >> index) & 1) == 0 && ((highlightedPossibleMoves >> index) & 1) == 0) {
+        return;
+    }
 
-    if (selectedPieceIndex != -1 && ((allPieces >> index) & 1) == 0) {
+    if (((highlightedPossibleMoves >> index) & 1) == 1) {
+        makeMove(selectedPieceIndex, index);
+
+        selectedPieceIndex = -1;
+        highlightedPossibleMoves = 0;
         return;
     }
 
