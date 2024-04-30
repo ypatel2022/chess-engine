@@ -15,12 +15,11 @@ void Board::initializePieces()
     blackPawns = 0b0000000011111111000000000000000000000000000000000000000000000000;
     blackRooks = 0b1000000100000000000000000000000000000000000000000000000000000000;
     blackKnights = 0b0100001000000000000000000000000000000000000000000000000000000000;
-
     blackBishops = 0b0010010000000000000000000000000000000000000000000000000000000000;
-    blackBishops = 0b0010010000000000000100000100000000000000001000010000000000000000;
-
     blackQueens = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKing = 0b0001000000000000000000000000000000000000000000000000000000000000;
+
+    blackKing = 0b000000000000000000000000011000011000000110000110000000000000000;
 
     allWhitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
     allBlackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
@@ -236,6 +235,74 @@ bool Board::hasCollided(int index, PieceColor color, bool& addPiece)
     return false;
 }
 
+void Board::generatePseudoPawnMoves(int index, PieceColor color)
+{
+    // check if in home row
+    // home row if row is 1 (white) or 6 (black)
+    int row = index / 8;
+    int i;
+
+    if (color == Black && row != 0) {
+
+        i = index - 8;
+        if (((allPieces >> i) & 1) == 0) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+
+        // add home row double move
+        if (row == 6) {
+            if (((allPieces >> i) & 1) == 0) {
+                i = index - 16;
+                if (((allPieces >> i) & 1) == 0) {
+                    highlightedPossibleMoves |= ((int64_t)1 << i);
+                }
+            }
+        }
+
+        // now add any kills
+        // top left is -9
+        // top right is -7
+        i = index - 9;
+        if (((allWhitePieces >> i) & 1) == 1 && index % 8 != 0) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+        i = index - 7;
+        if (((allWhitePieces >> i) & 1) == 1 && index % 8 != 7) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+    }
+
+    else if (color == White && row != 7) {
+
+        i = index + 8;
+        if (((allPieces >> i) & 1) == 0) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+
+        // add home row double move
+        if (row == 6) {
+            if (((allPieces >> i) & 1) == 0) {
+                i = index + 16;
+                if (((allPieces >> i) & 1) == 0) {
+                    highlightedPossibleMoves |= ((int64_t)1 << i);
+                }
+            }
+        }
+
+        // now add any kills
+        // top left is -9
+        // top right is -7
+        i = index + 9;
+        if (((allWhitePieces >> i) & 1) == 1 && index % 8 != 0) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+        i = index + 7;
+        if (((allWhitePieces >> i) & 1) == 1 && index % 8 != 7) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+    }
+}
+
 void Board::generatePseudoKnightMoves(int index, PieceColor turnColor)
 {
     // 17, 15, 10, 6, -6, -10, -15, -17
@@ -352,6 +419,7 @@ void Board::generatePseudoBishopMoves(int index, PieceColor color)
     // look down+right
     // when encountering an 8 in the "x" pos, break out of loop to avoid teleportation
     for (int i = index + 9; i < 64; i += 9) {
+
         if (index % 8 == 7) {
             break;
         }
@@ -365,10 +433,16 @@ void Board::generatePseudoBishopMoves(int index, PieceColor color)
             }
             break;
         }
+
+        if (i % 8 == 7) {
+            break;
+        }
     }
 
     // look down+left
     for (int i = index + 7; i < 64; i += 7) {
+
+        // skip if index is on the edge
         if (index % 8 == 0) {
             break;
         }
@@ -381,6 +455,133 @@ void Board::generatePseudoBishopMoves(int index, PieceColor color)
                 addPiece = false;
             }
             break;
+        }
+
+        if (i % 8 == 0) {
+            break;
+        }
+    }
+
+    // look up+right
+    for (int i = index - 7; i >= 0; i -= 7) {
+
+        if (index % 8 == 7) {
+            break;
+        }
+
+        if (!hasCollided(i, color, addPiece)) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        } else {
+            if (addPiece) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+                addPiece = false;
+            }
+            break;
+        }
+
+        if (i % 8 == 7) {
+            break;
+        }
+    }
+
+    // look up+left
+    for (int i = index - 9; i >= 0; i -= 9) {
+
+        if (index % 8 == 0) {
+            break;
+        }
+
+        if (!hasCollided(i, color, addPiece)) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        } else {
+            if (addPiece) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+                addPiece = false;
+            }
+            break;
+        }
+
+        if (i % 8 == 0) {
+            break;
+        }
+    }
+}
+
+void Board::generatePseudoQueenMoves(int index, PieceColor color)
+{
+    generatePseudoBishopMoves(index, color);
+    generatePseudoRookMoves(index, color);
+}
+
+void Board::generatePseudoKingMoves(int index, PieceColor color)
+{
+    bool addPiece = false;
+    int i;
+
+    // checking top, make sure valid position
+    if (index / 8 != 7) {
+
+        // check top left, -9
+        i = index - 9;
+        if (index % 8 != 0) {
+            if (((allBlackPieces >> i) & 1) == 0) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+            }
+        }
+
+        // check top, -8
+        i = index - 8;
+        if (((allBlackPieces >> i) & 1) == 0) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+
+        // check top left, -7
+        i = index - 7;
+        if (index % 8 != 7) {
+            if (((allBlackPieces >> i) & 1) == 0) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+            }
+        }
+    }
+
+    // check top left, +1
+    i = index + 1;
+    if (index % 8 != 7) {
+        if (((allBlackPieces >> i) & 1) == 0) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+    }
+
+    // check top left, -1
+    i = index - 1;
+    if (index % 8 != 0) {
+        if (((allBlackPieces >> i) & 1) == 0) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+    }
+
+    // check bottom
+    if (index / 8 != 0) {
+        // check top left, 9
+        i = index + 9;
+        if (index % 8 != 7) {
+            if (((allBlackPieces >> i) & 1) == 0) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+            }
+        }
+
+        // check top, 8
+        i = index + 8;
+        if (((allBlackPieces >> i) & 1) == 0) {
+            highlightedPossibleMoves |= ((int64_t)1 << i);
+        }
+
+        // check top left, 7
+        i = index + 7;
+        if (index % 8 != 0) {
+            if (((allBlackPieces >> i) & 1) == 0) {
+                highlightedPossibleMoves |= ((int64_t)1 << i);
+            }
         }
     }
 }
@@ -440,6 +641,18 @@ void Board::highlightUserPosition(int index)
 
         if (((blackBishops >> index) & 1) == 1) {
             generatePseudoBishopMoves(index, Black);
+        }
+
+        if (((blackQueens >> index) & 1) == 1) {
+            generatePseudoQueenMoves(index, Black);
+        }
+
+        if (((blackPawns >> index) & 1) == 1) {
+            generatePseudoPawnMoves(index, Black);
+        }
+
+        if (((blackKing >> index) & 1) == 1) {
+            generatePseudoKingMoves(index, Black);
         }
     }
 }

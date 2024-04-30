@@ -75,9 +75,12 @@ private:
     // move generation
     bool hasCollided(int index, PieceColor color, bool& addPiece);
 
+    void generatePseudoPawnMoves(int index, PieceColor color);
     void generatePseudoKnightMoves(int index, PieceColor color);
     void generatePseudoRookMoves(int index, PieceColor color);
     void generatePseudoBishopMoves(int index, PieceColor color);
+    void generatePseudoQueenMoves(int index, PieceColor color);
+    void generatePseudoKingMoves(int index, PieceColor color);
 
 public:
     Board(sf::RenderWindow& window);
