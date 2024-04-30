@@ -19,8 +19,6 @@ void Board::initializePieces()
     blackQueens = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKing = 0b0001000000000000000000000000000000000000000000000000000000000000;
 
-    blackKing = 0b000000000000000000000000011000011000000110000110000000000000000;
-
     allWhitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
     allBlackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
 
@@ -519,7 +517,7 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
     int i;
 
     // checking top, make sure valid position
-    if (index / 8 != 7) {
+    if (index / 8 != 0) {
 
         // check top left, -9
         i = index - 9;
@@ -544,7 +542,7 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
         }
     }
 
-    // check top left, +1
+    // check right, +1
     i = index + 1;
     if (index % 8 != 7) {
         if (((allBlackPieces >> i) & 1) == 0) {
@@ -552,7 +550,7 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
         }
     }
 
-    // check top left, -1
+    // check left, -1
     i = index - 1;
     if (index % 8 != 0) {
         if (((allBlackPieces >> i) & 1) == 0) {
@@ -561,7 +559,7 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
     }
 
     // check bottom
-    if (index / 8 != 0) {
+    if (index / 8 != 7) {
         // check top left, 9
         i = index + 9;
         if (index % 8 != 7) {
