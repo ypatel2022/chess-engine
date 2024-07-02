@@ -32,8 +32,8 @@ int main()
                 // get the resized size
                 sf::Vector2u size = window.getSize();
                 // setup my wanted aspect ratio
-                float heightRatio = height / width;
-                float widthRatio = width / height;
+                float heightRatio = (float)height / width;
+                float widthRatio = (float)width / height;
                 // adapt the resized window to my wanted aspect ratio
                 if (size.y * widthRatio <= size.x) {
                     size.x = size.y * widthRatio;

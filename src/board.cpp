@@ -147,51 +147,51 @@ int Board::getIndexFromPosition(sf::Vector2i pos)
     return 8 * (int)pos.y + (int)pos.x;
 }
 
-int64_t Board::removePiece(int64_t piecePositions, int index, PieceColor color)
+uint64_t Board::removePiece(uint64_t piecePositions, int index, PieceColor color)
 {
     // set index bit to zero
     if (((piecePositions >> index) & 1) == 1) {
-        piecePositions &= ~((int64_t)1 << index);
-        allPieces &= ~((int64_t)1 << index);
+        piecePositions &= ~((uint64_t)1 << index);
+        allPieces &= ~((uint64_t)1 << index);
 
         if (color == PieceColor::White) {
-            allWhitePieces &= ~((int64_t)1 << index);
+            allWhitePieces &= ~((uint64_t)1 << index);
         } else if (color == PieceColor::Black) {
-            allBlackPieces &= ~((int64_t)1 << index);
+            allBlackPieces &= ~((uint64_t)1 << index);
         }
     }
     return piecePositions;
 }
 
-int64_t Board::removePiece(int64_t piecePositions, sf::Vector2i boardPos, PieceColor color)
+uint64_t Board::removePiece(uint64_t piecePositions, sf::Vector2i boardPos, PieceColor color)
 {
     int index = getIndexFromPosition({ (int)boardPos.x / 125, (int)boardPos.y / 125 });
     return removePiece(piecePositions, index, color);
 }
 
-int64_t Board::addPiece(int64_t piecePositions, int index, PieceColor color)
+uint64_t Board::addPiece(uint64_t piecePositions, int index, PieceColor color)
 {
     // set index bit to one
     if (((allPieces >> index) & 1) == 0) {
-        piecePositions |= ((int64_t)1 << index);
-        allPieces |= ((int64_t)1 << index);
+        piecePositions |= ((uint64_t)1 << index);
+        allPieces |= ((uint64_t)1 << index);
 
         if (color == PieceColor::White) {
-            allWhitePieces |= ((int64_t)1 << index);
+            allWhitePieces |= ((uint64_t)1 << index);
         } else if (color == PieceColor::Black) {
-            allBlackPieces |= ((int64_t)1 << index);
+            allBlackPieces |= ((uint64_t)1 << index);
         }
     }
     return piecePositions;
 }
 
-int64_t Board::addPiece(int64_t piecePositions, sf::Vector2i boardPos, PieceColor color)
+uint64_t Board::addPiece(uint64_t piecePositions, sf::Vector2i boardPos, PieceColor color)
 {
     int index = getIndexFromPosition({ (int)boardPos.x / 125, (int)boardPos.y / 125 });
     return addPiece(piecePositions, index, color);
 }
 
-void Board::drawPiece(int64_t piecePositions, sf::Texture& pieceTexture)
+void Board::drawPiece(uint64_t piecePositions, sf::Texture& pieceTexture)
 {
     sf::Sprite sprite;
     sprite.setTexture(pieceTexture);
@@ -208,7 +208,7 @@ void Board::drawPiece(int64_t piecePositions, sf::Texture& pieceTexture)
     }
 }
 
-bool Board::hasCollided(int index, PieceColor color, bool& addPiece)
+bool Board::hasCollided(int index, PieceColor color, bool& addPiece) const
 {
     // check collision
     if (((allPieces >> index) & 1) == 1) {
@@ -244,7 +244,7 @@ void Board::generatePseudoPawnMoves(int index, PieceColor color)
 
         i = index - 8;
         if (((allPieces >> i) & 1) == 0) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
 
         // add home row double move
@@ -252,7 +252,7 @@ void Board::generatePseudoPawnMoves(int index, PieceColor color)
             if (((allPieces >> i) & 1) == 0) {
                 i = index - 16;
                 if (((allPieces >> i) & 1) == 0) {
-                    highlightedPossibleMoves |= ((int64_t)1 << i);
+                    highlightedPossibleMoves |= ((uint64_t)1 << i);
                 }
             }
         }
@@ -262,11 +262,11 @@ void Board::generatePseudoPawnMoves(int index, PieceColor color)
         // top right is -7
         i = index - 9;
         if (((allWhitePieces >> i) & 1) == 1 && index % 8 != 0) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
         i = index - 7;
         if (((allWhitePieces >> i) & 1) == 1 && index % 8 != 7) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
     }
 
@@ -274,7 +274,7 @@ void Board::generatePseudoPawnMoves(int index, PieceColor color)
 
         i = index + 8;
         if (((allPieces >> i) & 1) == 0) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
 
         // add home row double move
@@ -282,7 +282,7 @@ void Board::generatePseudoPawnMoves(int index, PieceColor color)
             if (((allPieces >> i) & 1) == 0) {
                 i = index + 16;
                 if (((allPieces >> i) & 1) == 0) {
-                    highlightedPossibleMoves |= ((int64_t)1 << i);
+                    highlightedPossibleMoves |= ((uint64_t)1 << i);
                 }
             }
         }
@@ -292,11 +292,11 @@ void Board::generatePseudoPawnMoves(int index, PieceColor color)
         // top right is -7
         i = index + 9;
         if (((allWhitePieces >> i) & 1) == 1 && index % 8 != 0) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
         i = index + 7;
         if (((allWhitePieces >> i) & 1) == 1 && index % 8 != 7) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
     }
 }
@@ -306,7 +306,7 @@ void Board::generatePseudoKnightMoves(int index, PieceColor turnColor)
     // 17, 15, 10, 6, -6, -10, -15, -17
     const int moves[] = { 17, 15, 10, 6, -6, -10, -15, -17 };
 
-    int pos;
+    int pos = 0;
     for (size_t i = 0; i < 8; i++) {
         int pos = index + moves[i];
 
@@ -339,16 +339,18 @@ void Board::generatePseudoKnightMoves(int index, PieceColor turnColor)
         if (turnColor == PieceColor::White) {
             if (((allWhitePieces >> pos) & 1) == 0) {
                 // make highlightedPossibleMoves a 1 then at pos
-                highlightedPossibleMoves |= ((int64_t)1 << pos);
+                highlightedPossibleMoves |= ((uint64_t)1 << pos);
             }
 
         } else if (turnColor == PieceColor::Black) {
             if (((allBlackPieces >> pos) & 1) == 0) {
                 // make highlightedPossibleMoves a 1 then at pos
-                highlightedPossibleMoves |= ((int64_t)1 << pos);
+                highlightedPossibleMoves |= ((uint64_t)1 << pos);
             }
         }
     }
+
+    // check if a certain move will the leave the king vulnerable
 }
 
 void Board::generatePseudoRookMoves(int index, PieceColor color)
@@ -360,10 +362,10 @@ void Board::generatePseudoRookMoves(int index, PieceColor color)
     // down
     for (int i = index + 8; i < 64; i += 8) {
         if (!hasCollided(i, color, addPiece)) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         } else {
             if (addPiece) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
                 addPiece = false;
             }
             break;
@@ -373,10 +375,10 @@ void Board::generatePseudoRookMoves(int index, PieceColor color)
     // up
     for (int i = index - 8; i >= 0; i -= 8) {
         if (!hasCollided(i, color, addPiece)) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         } else {
             if (addPiece) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
                 addPiece = false;
             }
             break;
@@ -386,10 +388,10 @@ void Board::generatePseudoRookMoves(int index, PieceColor color)
     // left
     for (int i = index - 1; i >= 8 * (index / 8); i--) {
         if (!hasCollided(i, color, addPiece)) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         } else {
             if (addPiece) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
                 addPiece = false;
             }
             break;
@@ -399,10 +401,10 @@ void Board::generatePseudoRookMoves(int index, PieceColor color)
     // right
     for (int i = index + 1; i < 8 * (index / 8 + 1); i++) {
         if (!hasCollided(i, color, addPiece)) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         } else {
             if (addPiece) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
                 addPiece = false;
             }
             break;
@@ -423,10 +425,10 @@ void Board::generatePseudoBishopMoves(int index, PieceColor color)
         }
 
         if (!hasCollided(i, color, addPiece)) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         } else {
             if (addPiece) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
                 addPiece = false;
             }
             break;
@@ -446,10 +448,10 @@ void Board::generatePseudoBishopMoves(int index, PieceColor color)
         }
 
         if (!hasCollided(i, color, addPiece)) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         } else {
             if (addPiece) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
                 addPiece = false;
             }
             break;
@@ -468,10 +470,10 @@ void Board::generatePseudoBishopMoves(int index, PieceColor color)
         }
 
         if (!hasCollided(i, color, addPiece)) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         } else {
             if (addPiece) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
                 addPiece = false;
             }
             break;
@@ -490,10 +492,10 @@ void Board::generatePseudoBishopMoves(int index, PieceColor color)
         }
 
         if (!hasCollided(i, color, addPiece)) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         } else {
             if (addPiece) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
                 addPiece = false;
             }
             break;
@@ -523,21 +525,21 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
         i = index - 9;
         if (index % 8 != 0) {
             if (((allBlackPieces >> i) & 1) == 0) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
             }
         }
 
         // check top, -8
         i = index - 8;
         if (((allBlackPieces >> i) & 1) == 0) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
 
         // check top left, -7
         i = index - 7;
         if (index % 8 != 7) {
             if (((allBlackPieces >> i) & 1) == 0) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
             }
         }
     }
@@ -546,7 +548,7 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
     i = index + 1;
     if (index % 8 != 7) {
         if (((allBlackPieces >> i) & 1) == 0) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
     }
 
@@ -554,7 +556,7 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
     i = index - 1;
     if (index % 8 != 0) {
         if (((allBlackPieces >> i) & 1) == 0) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
     }
 
@@ -564,21 +566,21 @@ void Board::generatePseudoKingMoves(int index, PieceColor color)
         i = index + 9;
         if (index % 8 != 7) {
             if (((allBlackPieces >> i) & 1) == 0) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
             }
         }
 
         // check top, 8
         i = index + 8;
         if (((allBlackPieces >> i) & 1) == 0) {
-            highlightedPossibleMoves |= ((int64_t)1 << i);
+            highlightedPossibleMoves |= ((uint64_t)1 << i);
         }
 
         // check top left, 7
         i = index + 7;
         if (index % 8 != 0) {
             if (((allBlackPieces >> i) & 1) == 0) {
-                highlightedPossibleMoves |= ((int64_t)1 << i);
+                highlightedPossibleMoves |= ((uint64_t)1 << i);
             }
         }
     }
@@ -595,55 +597,55 @@ void Board::makeMove(int source, int dest)
     if (((allBlackPieces >> source) & 1) == 1) {
 
         if (((blackKing >> source) & 1) == 1) {
-            blackKing &= ~((int64_t)1 << source);
-            blackKing |= ((int64_t)1 << dest);
+            blackKing &= ~((uint64_t)1 << source);
+            blackKing |= ((uint64_t)1 << dest);
 
         } else if (((blackQueens >> source) & 1) == 1) {
-            blackQueens &= ~((int64_t)1 << source);
-            blackQueens |= ((int64_t)1 << dest);
+            blackQueens &= ~((uint64_t)1 << source);
+            blackQueens |= ((uint64_t)1 << dest);
 
         } else if (((blackRooks >> source) & 1) == 1) {
-            blackRooks &= ~((int64_t)1 << source);
-            blackRooks |= ((int64_t)1 << dest);
+            blackRooks &= ~((uint64_t)1 << source);
+            blackRooks |= ((uint64_t)1 << dest);
 
         } else if (((blackBishops >> source) & 1) == 1) {
-            blackBishops &= ~((int64_t)1 << source);
-            blackBishops |= ((int64_t)1 << dest);
+            blackBishops &= ~((uint64_t)1 << source);
+            blackBishops |= ((uint64_t)1 << dest);
 
         } else if (((blackKnights >> source) & 1) == 1) {
-            blackKnights &= ~((int64_t)1 << source);
-            blackKnights |= ((int64_t)1 << dest);
+            blackKnights &= ~((uint64_t)1 << source);
+            blackKnights |= ((uint64_t)1 << dest);
 
         } else if (((blackPawns >> source) & 1) == 1) {
-            blackPawns &= ~((int64_t)1 << source);
-            blackPawns |= ((int64_t)1 << dest);
+            blackPawns &= ~((uint64_t)1 << source);
+            blackPawns |= ((uint64_t)1 << dest);
         }
 
     } else if (((allWhitePieces >> source) & 1) == 1) {
         // check if king
         if (((whiteKing >> source) & 1) == 1) {
-            whiteKing &= ~((int64_t)1 << source);
-            whiteKing |= ((int64_t)1 << dest);
+            whiteKing &= ~((uint64_t)1 << source);
+            whiteKing |= ((uint64_t)1 << dest);
 
         } else if (((whiteQueens >> source) & 1) == 1) {
-            whiteQueens &= ~((int64_t)1 << source);
-            whiteQueens |= ((int64_t)1 << dest);
+            whiteQueens &= ~((uint64_t)1 << source);
+            whiteQueens |= ((uint64_t)1 << dest);
 
         } else if (((whiteRooks >> source) & 1) == 1) {
-            whiteRooks &= ~((int64_t)1 << source);
-            whiteRooks |= ((int64_t)1 << dest);
+            whiteRooks &= ~((uint64_t)1 << source);
+            whiteRooks |= ((uint64_t)1 << dest);
 
         } else if (((whiteBishops >> source) & 1) == 1) {
-            whiteBishops &= ~((int64_t)1 << source);
-            whiteBishops |= ((int64_t)1 << dest);
+            whiteBishops &= ~((uint64_t)1 << source);
+            whiteBishops |= ((uint64_t)1 << dest);
 
         } else if (((whiteKnights >> source) & 1) == 1) {
-            whiteKnights &= ~((int64_t)1 << source);
-            whiteKnights |= ((int64_t)1 << dest);
+            whiteKnights &= ~((uint64_t)1 << source);
+            whiteKnights |= ((uint64_t)1 << dest);
 
         } else if (((whitePawns >> source) & 1) == 1) {
-            whitePawns &= ~((int64_t)1 << source);
-            whitePawns |= ((int64_t)1 << dest);
+            whitePawns &= ~((uint64_t)1 << source);
+            whitePawns |= ((uint64_t)1 << dest);
         }
     }
 
@@ -651,43 +653,43 @@ void Board::makeMove(int source, int dest)
     if (((allBlackPieces >> dest) & 1) == 1) {
 
         if (((blackKing >> dest) & 1) == 1) {
-            blackKing &= ~((int64_t)1 << dest);
+            blackKing &= ~((uint64_t)1 << dest);
 
         } else if (((blackQueens >> dest) & 1) == 1) {
-            blackQueens &= ~((int64_t)1 << dest);
+            blackQueens &= ~((uint64_t)1 << dest);
 
         } else if (((blackRooks >> dest) & 1) == 1) {
-            blackRooks &= ~((int64_t)1 << dest);
+            blackRooks &= ~((uint64_t)1 << dest);
 
         } else if (((blackBishops >> dest) & 1) == 1) {
-            blackBishops &= ~((int64_t)1 << dest);
+            blackBishops &= ~((uint64_t)1 << dest);
 
         } else if (((blackKnights >> dest) & 1) == 1) {
-            blackKnights &= ~((int64_t)1 << dest);
+            blackKnights &= ~((uint64_t)1 << dest);
 
         } else if (((blackPawns >> dest) & 1) == 1) {
-            blackPawns &= ~((int64_t)1 << dest);
+            blackPawns &= ~((uint64_t)1 << dest);
         }
 
     } else if (((allWhitePieces >> dest) & 1) == 1) {
         // check if king
         if (((whiteKing >> dest) & 1) == 1) {
-            whiteKing &= ~((int64_t)1 << dest);
+            whiteKing &= ~((uint64_t)1 << dest);
 
         } else if (((whiteQueens >> dest) & 1) == 1) {
-            whiteQueens &= ~((int64_t)1 << dest);
+            whiteQueens &= ~((uint64_t)1 << dest);
 
         } else if (((whiteRooks >> dest) & 1) == 1) {
-            whiteRooks &= ~((int64_t)1 << dest);
+            whiteRooks &= ~((uint64_t)1 << dest);
 
         } else if (((whiteBishops >> dest) & 1) == 1) {
-            whiteBishops &= ~((int64_t)1 << dest);
+            whiteBishops &= ~((uint64_t)1 << dest);
 
         } else if (((whiteKnights >> dest) & 1) == 1) {
-            whiteKnights &= ~((int64_t)1 << dest);
+            whiteKnights &= ~((uint64_t)1 << dest);
 
         } else if (((whitePawns >> dest) & 1) == 1) {
-            whitePawns &= ~((int64_t)1 << dest);
+            whitePawns &= ~((uint64_t)1 << dest);
         }
     }
 
@@ -718,11 +720,12 @@ void Board::drawPieces()
 void Board::highlightUserPosition(int index)
 {
     // do nothing if clicked on compleltely empty sqaure
-    if (((allBlackPieces >> index) & 1) == 0 && ((highlightedPossibleMoves >> index) & 1) == 0) {
+    if (getBit(allBlackPieces, index) == 0 && getBit(highlightedPossibleMoves, index) == 0) {
         return;
     }
 
-    if (((highlightedPossibleMoves >> index) & 1) == 1) {
+    if (getBit(highlightedPossibleMoves, index) == 1) {
+
         makeMove(selectedPieceIndex, index);
 
         selectedPieceIndex = -1;
@@ -741,31 +744,31 @@ void Board::highlightUserPosition(int index)
         return;
     }
 
-    if (((allBlackPieces >> index) & 1) == 1) {
-        // selectedPieceIndex ^= ((int64_t)1 << index);
+    if (getBit(allBlackPieces, index) == 1) {
+        // selectedPieceIndex ^= ((uint64_t)1 << index);
         selectedPieceIndex = index;
 
-        if (((blackKnights >> index) & 1) == 1) {
+        if (getBit(blackKnights, index) == 1) {
             generatePseudoKnightMoves(index, Black);
         }
 
-        if (((blackRooks >> index) & 1) == 1) {
+        if (getBit(blackRooks, index) == 1) {
             generatePseudoRookMoves(index, Black);
         }
 
-        if (((blackBishops >> index) & 1) == 1) {
+        if (getBit(blackBishops, index) == 1) {
             generatePseudoBishopMoves(index, Black);
         }
 
-        if (((blackQueens >> index) & 1) == 1) {
+        if (getBit(blackQueens, index) == 1) {
             generatePseudoQueenMoves(index, Black);
         }
 
-        if (((blackPawns >> index) & 1) == 1) {
+        if (getBit(blackPawns, index) == 1) {
             generatePseudoPawnMoves(index, Black);
         }
 
-        if (((blackKing >> index) & 1) == 1) {
+        if (getBit(blackKing, index) == 1) {
             generatePseudoKingMoves(index, Black);
         }
     }

@@ -1,5 +1,10 @@
 #pragma once
 
+// useful macros
+#define getBit(num, i) ((num >> i) & 1)
+#define setBit(num, i) ((num) |= (1ULL << i))
+#define clearBit(num, i) ((num) &= ~(1ULL << i))
+
 #define DEBUG_ON 1
 
 #if DEBUG_ON
@@ -7,7 +12,7 @@
 #include <iostream>
 #endif
 
-void debugPrintBitBoard(int64_t bitBoard)
+void debugPrintBitBoard(uint64_t bitBoard)
 {
 #if DEBUG_ON
 
