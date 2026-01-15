@@ -11,7 +11,7 @@ public:
 
     void drawBoard();
     void drawPieces();
-    void processInput(sf::Event& event);
+    void processInput(const sf::Event& event);
 
     enum PieceColor {
         Black = 0,

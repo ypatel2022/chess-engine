@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <optional>
 
 #include "board.h"
 
@@ -9,31 +10,35 @@ int main()
     uint32_t height = 1000u;
     bool userTurn = true;
 
-    sf::RenderWindow window = sf::RenderWindow { { width, height }, "Chess Engine", sf::Style::Titlebar | sf::Style::Close };
+    sf::RenderWindow window(
+        sf::VideoMode(sf::Vector2u(width, height)),
+        "Chess Engine",
+        sf::State::Windowed);
     window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60);
 
     Board board = Board(window);
 
     while (window.isOpen()) {
-        for (auto event = sf::Event {}; window.pollEvent(event);) {
-
-            switch (event.type) {
-            case sf::Event::Closed:
+        while (const std::optional<sf::Event> event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>()) {
                 window.close();
-                break;
+                continue;
+            }
 
-            case sf::Event::KeyPressed:
-                if (event.key.code == sf::Keyboard::Escape)
+            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+                if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
                     window.close();
-                break;
-            case sf::Event::Resized:
+                }
+            }
+
+            if (const auto* resized = event->getIf<sf::Event::Resized>()) {
                 // set screen size
                 // get the resized size
-                sf::Vector2u size = window.getSize();
+                sf::Vector2u size = resized->size;
                 // setup my wanted aspect ratio
-                float heightRatio = (float)height / width;
-                float widthRatio = (float)width / height;
+                float heightRatio = static_cast<float>(height) / width;
+                float widthRatio = static_cast<float>(width) / height;
                 // adapt the resized window to my wanted aspect ratio
                 if (size.y * widthRatio <= size.x) {
                     size.x = size.y * widthRatio;
@@ -42,11 +47,10 @@ int main()
                 }
                 // set the new size
                 window.setSize(size);
-                break;
             }
 
             if (userTurn) {
-                board.processInput(event);
+                board.processInput(*event);
             }
         }
 

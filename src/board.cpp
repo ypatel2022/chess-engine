@@ -3,6 +3,26 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
+namespace {
+void appendQuad(sf::VertexArray& vertices,
+                const sf::Vector2f& topLeft,
+                float size,
+                const sf::Color& color)
+{
+    const sf::Vector2f topRight(topLeft.x + size, topLeft.y);
+    const sf::Vector2f bottomLeft(topLeft.x, topLeft.y + size);
+    const sf::Vector2f bottomRight(topLeft.x + size, topLeft.y + size);
+
+    vertices.append(sf::Vertex(topLeft, color));
+    vertices.append(sf::Vertex(bottomLeft, color));
+    vertices.append(sf::Vertex(bottomRight, color));
+
+    vertices.append(sf::Vertex(topLeft, color));
+    vertices.append(sf::Vertex(bottomRight, color));
+    vertices.append(sf::Vertex(topRight, color));
+}
+} // namespace
+
 void Board::initializePieces()
 {
     whitePawns = 0b0000000000000000000000000000000000000000000000001111111100000000;
@@ -42,7 +62,7 @@ Board::Board(sf::RenderWindow& window)
 {
     initializePieces();
 
-    sf::VertexArray gridCellVA(sf::Quads);
+    sf::VertexArray gridCellVA(sf::PrimitiveType::Triangles);
 
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -51,24 +71,9 @@ Board::Board(sf::RenderWindow& window)
             int x = j * s;
             int y = i * s;
 
-            sf::Vertex tl(sf::Vector2f(x, y));
-            sf::Vertex bl(sf::Vector2f(x, y + s));
-            sf::Vertex br(sf::Vector2f(x + s, y + s));
-            sf::Vertex tr(sf::Vector2f(x + s, y));
-
             // is board piece odd or even?
-            if ((x + y) % 2 == 1) {
-                tl.color = bl.color = br.color = tr.color = dark;
-
-            } else {
-                tl.color = bl.color = br.color = tr.color = light;
-            }
-
-            // add to vertex array
-            gridCellVA.append(tl);
-            gridCellVA.append(bl);
-            gridCellVA.append(br);
-            gridCellVA.append(tr);
+            const sf::Color squareColor = ((x + y) % 2 == 1) ? dark : light;
+            appendQuad(gridCellVA, sf::Vector2f(x, y), s, squareColor);
         }
     }
 
@@ -82,7 +87,7 @@ Board::~Board()
 
 void Board::drawBoard()
 {
-    sf::VertexArray highlightedCellVA(sf::Quads);
+    sf::VertexArray highlightedCellVA(sf::PrimitiveType::Triangles);
 
     if (selectedPieceIndex != -1) {
         // draw the highlighted square
@@ -93,18 +98,7 @@ void Board::drawBoard()
         int x = pos.x * s;
         int y = pos.y * s;
 
-        sf::Vertex tl(sf::Vector2f(x, y));
-        sf::Vertex bl(sf::Vector2f(x, y + s));
-        sf::Vertex br(sf::Vector2f(x + s, y + s));
-        sf::Vertex tr(sf::Vector2f(x + s, y));
-
-        tl.color = bl.color = br.color = tr.color = highlighted;
-
-        // add to vertex array
-        highlightedCellVA.append(tl);
-        highlightedCellVA.append(bl);
-        highlightedCellVA.append(br);
-        highlightedCellVA.append(tr);
+        appendQuad(highlightedCellVA, sf::Vector2f(x, y), s, highlighted);
     }
 
     // update vertex array with highlighted squares
@@ -118,18 +112,7 @@ void Board::drawBoard()
             int x = pos.x * s;
             int y = pos.y * s;
 
-            sf::Vertex tl(sf::Vector2f(x, y));
-            sf::Vertex bl(sf::Vector2f(x, y + s));
-            sf::Vertex br(sf::Vector2f(x + s, y + s));
-            sf::Vertex tr(sf::Vector2f(x + s, y));
-
-            tl.color = bl.color = br.color = tr.color = highlighted;
-
-            // add to vertex array
-            highlightedCellVA.append(tl);
-            highlightedCellVA.append(bl);
-            highlightedCellVA.append(br);
-            highlightedCellVA.append(tr);
+            appendQuad(highlightedCellVA, sf::Vector2f(x, y), s, highlighted);
         }
     }
 
@@ -193,14 +176,13 @@ uint64_t Board::addPiece(uint64_t piecePositions, sf::Vector2i boardPos, PieceCo
 
 void Board::drawPiece(uint64_t piecePositions, sf::Texture& pieceTexture)
 {
-    sf::Sprite sprite;
-    sprite.setTexture(pieceTexture);
-    sprite.setTextureRect(sf::IntRect(0, 0, 125, 125));
+    sf::Sprite sprite(pieceTexture);
+    sprite.setTextureRect(sf::IntRect({ 0, 0 }, { 125, 125 }));
 
     for (int i = 0; i < 64; i++) {
         if ((piecePositions & 1) == 1) {
             sf::Vector2i pos = getPositionFromIndex(i);
-            sprite.setPosition(pos.x * 125, pos.y * 125);
+            sprite.setPosition(sf::Vector2f(pos.x * 125.0f, pos.y * 125.0f));
             window.draw(sprite);
         }
 
@@ -774,7 +756,7 @@ void Board::highlightUserPosition(int index)
     }
 }
 
-void Board::processInput(sf::Event& event)
+void Board::processInput(const sf::Event& event)
 {
     // test to check if setting / clearing the correct bit
     // get mouse position
@@ -790,8 +772,8 @@ void Board::processInput(sf::Event& event)
         // Create a bool variable for locking the click.
         static bool lock_click;
 
-        if (event.type == sf::Event::MouseButtonPressed) {
-            if (event.mouseButton.button == sf::Mouse::Left && lock_click != true) {
+        if (const auto* pressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+            if (pressed->button == sf::Mouse::Button::Left && lock_click != true) {
                 // std::cout << "lmb-pressed" << std::endl;
                 lock_click = true;
 
@@ -800,8 +782,8 @@ void Board::processInput(sf::Event& event)
             }
         }
 
-        if (event.type == sf::Event::MouseButtonReleased) {
-            if (event.mouseButton.button == sf::Mouse::Left) {
+        if (const auto* released = event.getIf<sf::Event::MouseButtonReleased>()) {
+            if (released->button == sf::Mouse::Button::Left) {
                 // unlock when the button has been released.
                 lock_click = false;
             }
